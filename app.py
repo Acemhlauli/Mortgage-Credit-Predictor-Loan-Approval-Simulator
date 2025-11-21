@@ -40,13 +40,13 @@ class MockRFModel:
         # Risk scoring logic (higher score = higher default risk)
         risk_score = np.zeros(len(X))
         
-        # Debt-to-income: normalized 0-60 range (reduced weight)
+        # Debt-to-income: normalised 0-60 range (reduced weight)
         risk_score += (debt_to_income / 60.0) * 0.20  # Reduced from 0.30
         
         # Credit score: inverse normalized (lower score = higher risk) (reduced weight)
         risk_score += ((850 - credit_score) / 550.0) * 0.25  # Reduced from 0.35
         
-        # Loan-to-value: normalized 50-100 range (reduced weight)
+        # Loan-to-value: normalised 50-100 range (reduced weight)
         risk_score += ((loan_to_value - 50) / 50.0) * 0.15  # Reduced from 0.20
         
         # High-risk servicer (reduced penalty)
@@ -363,7 +363,7 @@ def main():
         default_prob = prediction_proba[0][1]  # P(Default = 1)
         
         # Decision threshold - increased to be more lenient
-        THRESHOLD = 0.50  # 50% threshold (increased from 20%)
+        THRESHOLD = 0.40  # 50% threshold (increased from 20%)
         
         with col1:
             st.subheader("📊 Risk Assessment")
@@ -439,7 +439,7 @@ def main():
             model_type = "Trained Random Forest" if is_real_model else "Simulated Random Forest"
             st.markdown(f"""
             - **Model Type:** {model_type}
-            - **Decision Threshold:** 50% default probability
+            - **Decision Threshold:** 40% default probability
             - **Key Risk Factors:** Credit score, debt-to-income ratio, loan-to-value ratio
             - **Features Analysed:** 25 total features, including location and servicer data
             """)
