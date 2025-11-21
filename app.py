@@ -47,7 +47,7 @@ class MockRFModel:
         risk_score += ((850 - credit_score) / 550.0) * 0.25  # Reduced from 0.35
         
         # Loan-to-value: normalised 50-100 range (reduced weight)
-        risk_score += ((loan_to_value - 50) / 50.0) * 0.15  # Reduced from 0.20
+        risk_score += ((100 - loan_to_value) / 50.0) * 0.15  # Reduced from 0.20
         
         # High-risk servicer (reduced penalty)
         risk_score += servicer_47 * 0.15  # Reduced from 0.25
