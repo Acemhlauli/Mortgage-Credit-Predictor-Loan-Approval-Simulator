@@ -1,0 +1,6 @@
+#Create a requirements file for Streamlit
+plotly
+streamlit
+numpy
+pandas
+scikit-learn
