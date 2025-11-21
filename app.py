@@ -40,33 +40,36 @@ class MockRFModel:
         # Risk scoring logic (higher score = higher default risk)
         risk_score = np.zeros(len(X))
         
-        # Debt-to-income: normalized 0-60 range
-        risk_score += (debt_to_income / 60.0) * 0.30
+        # Debt-to-income: normalized 0-60 range (reduced weight)
+        risk_score += (debt_to_income / 60.0) * 0.20  # Reduced from 0.30
         
-        # Credit score: inverse normalized (lower score = higher risk)
-        risk_score += ((850 - credit_score) / 550.0) * 0.35
+        # Credit score: inverse normalized (lower score = higher risk) (reduced weight)
+        risk_score += ((850 - credit_score) / 550.0) * 0.25  # Reduced from 0.35
         
-        # Loan-to-value: normalized 50-100 range
-        risk_score += ((loan_to_value - 50) / 50.0) * 0.20
+        # Loan-to-value: normalized 50-100 range (reduced weight)
+        risk_score += ((loan_to_value - 50) / 50.0) * 0.15  # Reduced from 0.20
         
-        # High-risk servicer (significant penalty)
-        risk_score += servicer_47 * 0.25
+        # High-risk servicer (reduced penalty)
+        risk_score += servicer_47 * 0.15  # Reduced from 0.25
         
-        # Alternative servicer (moderate penalty)
-        risk_score += servicer_35 * 0.12
+        # Alternative servicer (reduced penalty)
+        risk_score += servicer_35 * 0.08  # Reduced from 0.12
         
-        # High-risk location
-        risk_score += msa_32820 * 0.15
+        # High-risk location (reduced penalty)
+        risk_score += msa_32820 * 0.10  # Reduced from 0.15
         
         # Longer loan term (slight increase)
-        risk_score += (loan_term == 30) * 0.08
+        risk_score += (loan_term == 30) * 0.05  # Reduced from 0.08
         
-        # Mortgage insurance (protective factor)
-        risk_score -= mortgage_ins * 0.10
+        # Mortgage insurance (stronger protective factor)
+        risk_score -= mortgage_ins * 0.15  # Increased from -0.10
         
-        # Add some realistic randomness
+        # Add baseline adjustment to lower overall risk scores
+        risk_score -= 0.15  # Subtract 15% baseline to shift distribution lower
+        
+        # Add some realistic randomness (reduced variance)
         np.random.seed(42)
-        noise = np.random.normal(0, 0.02, len(X))
+        noise = np.random.normal(0, 0.015, len(X))  # Reduced from 0.02
         risk_score += noise
         
         # Clip to [0, 1] probability range
@@ -128,42 +131,42 @@ def calculate_feature_contributions(user_inputs, default_prob):
     """
     contributions = {}
     
-    # Base rate (average default probability)
-    base_rate = 0.15
+    # Base rate (average default probability) - adjusted lower
+    base_rate = 0.25  # Increased from 0.15
     
-    # Calculate contributions based on feature values
+    # Calculate contributions based on feature values (adjusted for more lenient scoring)
     # Debt-to-income contribution
-    dti_risk = (user_inputs['debt_to_income'] - 35) / 60.0 * 0.08
+    dti_risk = (user_inputs['debt_to_income'] - 35) / 60.0 * 0.05  # Reduced from 0.08
     contributions['Debt-to-Income Ratio'] = dti_risk
     
     # Credit score contribution (inverse relationship)
-    credit_risk = (680 - user_inputs['credit_score']) / 550.0 * 0.10
+    credit_risk = (680 - user_inputs['credit_score']) / 550.0 * 0.07  # Reduced from 0.10
     contributions['Credit Score'] = credit_risk
     
     # Loan-to-value contribution
-    ltv_risk = (user_inputs['loan_to_value'] - 80) / 50.0 * 0.06
+    ltv_risk = (user_inputs['loan_to_value'] - 80) / 50.0 * 0.04  # Reduced from 0.06
     contributions['Loan-to-Value Ratio'] = ltv_risk
     
     # Loan term contribution
-    term_risk = 0.03 if user_inputs['loan_term'] == 30 else -0.02
+    term_risk = 0.02 if user_inputs['loan_term'] == 30 else -0.03  # Reduced from 0.03/-0.02
     contributions['Loan Term'] = term_risk
     
     # Servicer contribution
     if user_inputs['servicer'] == 'High-Risk Servicer':
-        contributions['Loan Servicer'] = 0.12
+        contributions['Loan Servicer'] = 0.08  # Reduced from 0.12
     elif user_inputs['servicer'] == 'Alternative Servicer':
-        contributions['Loan Servicer'] = 0.05
+        contributions['Loan Servicer'] = 0.03  # Reduced from 0.05
     else:
-        contributions['Loan Servicer'] = -0.02
+        contributions['Loan Servicer'] = -0.03  # Improved from -0.02
     
     # Location contribution
     if user_inputs['location'] == 'High-Risk Area':
-        contributions['Property Location'] = 0.08
+        contributions['Property Location'] = 0.05  # Reduced from 0.08
     else:
-        contributions['Property Location'] = -0.01
+        contributions['Property Location'] = -0.02  # Improved from -0.01
     
-    # Mortgage insurance contribution
-    contributions['Mortgage Insurance'] = -0.05 if user_inputs['mortgage_insurance'] else 0.02
+    # Mortgage insurance contribution (stronger protective effect)
+    contributions['Mortgage Insurance'] = -0.08 if user_inputs['mortgage_insurance'] else 0.03  # Improved from -0.05/0.02
     
     return contributions
 
@@ -359,8 +362,8 @@ def main():
         prediction_proba = model.predict_proba(feature_vector)
         default_prob = prediction_proba[0][1]  # P(Default = 1)
         
-        # Decision threshold
-        THRESHOLD = 0.20
+        # Decision threshold - increased to be more lenient
+        THRESHOLD = 0.50  # 50% threshold (increased from 20%)
         
         with col1:
             st.subheader("📊 Risk Assessment")
@@ -436,7 +439,7 @@ def main():
             model_type = "Trained Random Forest" if is_real_model else "Simulated Random Forest"
             st.markdown(f"""
             - **Model Type:** {model_type}
-            - **Decision Threshold:** 20% default probability
+            - **Decision Threshold:** 50% default probability
             - **Key Risk Factors:** Credit score, debt-to-income ratio, loan-to-value ratio
             - **Features Analysed:** 25 total features, including location and servicer data
             """)
